@@ -41,6 +41,37 @@ Copyright (c) 2015-2016 Xiaowei Zhu, Tsinghua University
 #include "core/time.hpp"
 #include "core/type.hpp"
 
+struct MemStatus {
+    size_t vm_peak; // KBytes
+    size_t vm_size; // KBytes
+    size_t vm_hwm;  // KBytes
+    size_t vm_rss;  // KBytes
+};
+
+inline MemStatus self_mem_usage() {
+    MemStatus status;
+    char buffer[1024] = "";
+
+    FILE *file = fopen("/proc/self/status", "r");
+    while (fscanf(file, " %1023s", buffer) == 1) {
+        if (strcmp(buffer, "VmRSS:") == 0) {
+          fscanf(file, " %lu", &status.vm_rss);
+        }
+        if (strcmp(buffer, "VmHWM:") == 0) {
+          fscanf(file, " %lu", &status.vm_hwm);
+        }
+        if (strcmp(buffer, "VmSize:") == 0) {
+          fscanf(file, " %lu", &status.vm_size);
+        }
+        if (strcmp(buffer, "VmPeak:") == 0) {
+          fscanf(file, " %lu", &status.vm_peak);
+        }
+    }
+    fclose(file);
+
+    return status;
+}
+
 enum ThreadStatus {
   WORKING,
   STEALING
@@ -238,7 +269,7 @@ public:
 
   // deallocate a vertex array
   template<typename T>
-  T * dealloc_vertex_array(T * array) {
+  void dealloc_vertex_array(T * array) {
     numa_free(array, sizeof(T) * vertices);
   }
 

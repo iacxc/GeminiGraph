@@ -116,10 +116,14 @@ int main(int argc, char ** argv) {
     exit(-1);
   }
 
-  Graph<Empty> * graph;
+  MemStatus mstatus = self_mem_usage();
+  printf("Memory before load graph %.3g GBytes.\n", (double)mstatus.vm_rss / 1024 / 1024);
+  Graph<Empty> *graph;
   graph = new Graph<Empty>();
   VertexId root = std::atoi(argv[3]);
   graph->load_directed(argv[1], std::atoi(argv[2]));
+  mstatus = self_mem_usage();
+  printf("Memory after load graph %.3g GBytes.\n", (double)mstatus.vm_rss / 1024 / 1024);
 
   compute(graph, root);
   for (int run=0;run<5;run++) {
